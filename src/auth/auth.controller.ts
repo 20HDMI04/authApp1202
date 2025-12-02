@@ -2,6 +2,7 @@ import { Body, Controller, ForbiddenException, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { UsersService } from 'src/users/users.service';
+import * as argon2 from 'argon2';
 
 @Controller('auth')
 export class AuthController {
@@ -16,6 +17,14 @@ export class AuthController {
     if (!user) {
       throw new ForbiddenException('Invalid email or password');
     }
-    // TODO: Add password verification logic here
+
+    const isPasswordValid = await argon2.verify(
+      user.password,
+      loginDto.password,
+    );
+    if (!isPasswordValid) {
+      throw new ForbiddenException('Invalid email or password');
+    }
+    return { token: await this.usersService.createToken(user.id) };
   }
 }

@@ -4,6 +4,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma.service';
 import * as argon2 from 'argon2';
 import { User } from 'generated/prisma/client';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class UsersService {
@@ -23,6 +24,17 @@ export class UsersService {
 
   async findByEmail(email: string) {
     return await this.prisma.user.findUnique({ where: { email } });
+  }
+
+  async createToken(id: number) {
+    const newToken = crypto.randomBytes(32).toString('hex');
+    await this.prisma.token.create({
+      data: {
+        token: newToken,
+        user: { connect: { id } },
+      },
+    });
+    return newToken;
   }
 
   findAll() {
